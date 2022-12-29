@@ -2,6 +2,8 @@
 
 using Microsoft.AspNetCore.Mvc;
 
+using Uqs.Weather.Wrappers;
+
 namespace Uqs.Weather.Controllers;
 [ApiController]
 [Route("[controller]")]
@@ -14,21 +16,30 @@ public class WeatherForecastController : ControllerBase
     {
         "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
     };
+    private readonly IRandomWrapper _randomWrapper;
+    private readonly INowWrapper _nowWrapper;
+    private readonly IClient _openWeatherClient;
     private readonly ILogger<WeatherForecastController> _logger;
-    private readonly IConfiguration _configuration;
+    //private readonly IConfiguration _configuration;
 
-    public WeatherForecastController(ILogger<WeatherForecastController> logger, IConfiguration configuration)
+    public WeatherForecastController(IRandomWrapper randomWrapper, INowWrapper nowWrapper,
+                                     IClient openWeatherClient,
+                                     ILogger<WeatherForecastController> logger,
+                                     IConfiguration /*configuration*/ _)
     {
+        _randomWrapper = randomWrapper;
+        _nowWrapper = nowWrapper;
+        _openWeatherClient = openWeatherClient;
         _logger = logger;
-        _configuration = configuration;
+        //_configuration = configuration;
     }
 
     [HttpGet(Name = "GetWeatherForecast")]
     public IEnumerable<WeatherForecast> Get() => Enumerable.Range(1, 5).Select(index => new WeatherForecast
     {
-        Date = DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-        TemperatureC = Random.Shared.Next(-20, 55),
-        Summary = _summaries[Random.Shared.Next(_summaries.Length)]
+        Date = DateOnly.FromDateTime(_nowWrapper.Now.AddDays(index)),
+        TemperatureC = _randomWrapper.Next(-20, 55),
+        Summary = _summaries[_randomWrapper.Next(0, _summaries.Length)]
     })
         .ToArray();
 
@@ -44,8 +55,8 @@ public class WeatherForecastController : ControllerBase
         {
             weatherForecasts[i] = new WeatherForecast
             {
-                Date = DateOnly.FromDateTime(DateTime.Now).AddDays(i + 1),
-                TemperatureC = Random.Shared.Next(-0, 55)
+                Date = DateOnly.FromDateTime(_nowWrapper.Now).AddDays(i + 1),
+                TemperatureC = _randomWrapper.Next(-0, 55)
             };
             weatherForecasts[i].Summary = MapFeelToTemperature(weatherForecasts[i].TemperatureC);
         }
@@ -60,12 +71,11 @@ public class WeatherForecastController : ControllerBase
     [HttpGet("GetRealWeatherForecast")]
     public async Task<IEnumerable<WeatherForecast>> GetReal()
     {
-        string apiKey = _configuration["OpenWeather:Key"]
-                        ?? throw new KeyNotFoundException("Configurtion for OpenWeather:Key not found.");
-        HttpClient httpClient = new();
-        Client openWeatherClient = new(apiKey, httpClient);
+        //string apiKey = _configuration["OpenWeather:Key"]
+        //                ?? throw new KeyNotFoundException("Configurtion for OpenWeather:Key not found.");
+        //HttpClient httpClient = new();
         OneCallResponse oneCallResponse
-            = await openWeatherClient
+            = await _openWeatherClient
                     .OneCallAsync(OceansideLatitude,
                                   OceansideLongitude,
                                   new[] { Excludes.Current, Excludes.Minutely, Excludes.Hourly, Excludes.Alerts },
