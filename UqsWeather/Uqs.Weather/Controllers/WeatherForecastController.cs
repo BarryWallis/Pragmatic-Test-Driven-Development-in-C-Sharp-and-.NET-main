@@ -20,18 +20,15 @@ public class WeatherForecastController : ControllerBase
     private readonly INowWrapper _nowWrapper;
     private readonly IClient _openWeatherClient;
     private readonly ILogger<WeatherForecastController> _logger;
-    //private readonly IConfiguration _configuration;
 
     public WeatherForecastController(IRandomWrapper randomWrapper, INowWrapper nowWrapper,
                                      IClient openWeatherClient,
-                                     ILogger<WeatherForecastController> logger,
-                                     IConfiguration /*configuration*/ _)
+                                     ILogger<WeatherForecastController> logger)
     {
         _randomWrapper = randomWrapper;
         _nowWrapper = nowWrapper;
         _openWeatherClient = openWeatherClient;
         _logger = logger;
-        //_configuration = configuration;
     }
 
     [HttpGet(Name = "GetWeatherForecast")]
