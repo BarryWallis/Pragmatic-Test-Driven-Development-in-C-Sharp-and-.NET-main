@@ -1,6 +1,6 @@
 ﻿using AdamTibi.OpenWeather;
 
-using Uqs.Weather;
+using Uqs.Weather.Stubs;
 using Uqs.Weather.Wrappers;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
@@ -12,7 +12,7 @@ builder.Services.AddSingleton<IClient>(_ =>
                              ?? throw new KeyNotFoundException("LoadTest:IsActive value not found."));
     if (isLoad)
     {
-        return new ClientStub();
+        return new ClientStub(DateTime.Now, Enumerable.Range(1, 7).Select(i => (double)i).ToArray());
     }
     else
     {
